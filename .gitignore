@@ -1,4 +1,6 @@
- *.directory
+
+### Dolphin ###
+*.directory
 
 ### Idris ###
 *.ibc
