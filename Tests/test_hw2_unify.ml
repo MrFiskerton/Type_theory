@@ -1,5 +1,5 @@
 open Hw2_unify;;
-                                           *)
+
 type substitution = (string * algebraic_term) list
 type equation = algebraic_term * algebraic_term
 type system_of_equations = equation list 
