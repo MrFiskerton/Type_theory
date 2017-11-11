@@ -4,10 +4,6 @@ open Hw1
 open Hw1_reduction
 open Hw2_unify
 
-(* Write in console to run:                                                                                                                       *)
-(* > ocamlc -I ../HW1/ ../HW1/hw1.ml -I ../HW1/ ../HW1/hw1_reduction.ml -I . hw2_unify.ml hw2_inference.mli hw2_inference.ml -o hw2_inference.out *)
-(* > ./<EXECUTOR-NAME>                                                                                                                            *)
-
 type simp_type = S_Elem  of string | S_Arrow  of simp_type * simp_type
 type hm_lambda = HM_Var  of string | HM_Abs   of string * hm_lambda  | HM_App of hm_lambda * hm_lambda | HM_Let of string * hm_lambda * hm_lambda
 type hm_type   = HM_Elem of string | HM_Arrow of hm_type * hm_type   | HM_ForAll of string * hm_type
@@ -21,11 +17,11 @@ let generator_numbers2 n = Stream.from (fun i -> if i < n then Some i else None)
 
 let gen_int1 = generator_numbers2 2147000000;;
 let next_type() = match (Stream.next gen_int1) with
-    | k -> "type" ^ string_of_int k;;
+	| k -> "type" ^ string_of_int k;;
 
 let gen_int2 = generator_numbers2 2147000000;;
 let next_var() = match (Stream.next gen_int2) with
-    | k -> "var" ^ string_of_int k;;
+	| k -> "var" ^ string_of_int k;;
 
 let rec term_of_simp_type t = 
 	match t with
@@ -33,7 +29,7 @@ let rec term_of_simp_type t =
 	| S_Arrow(a, b) -> Hw2_unify.Fun("->", [(term_of_simp_type a);(term_of_simp_type b)]);;
 
 let rec simp_type_of_term t =
-    match t with
+	match t with
 	| Hw2_unify.Var(v) -> S_Elem(v)
 	| Hw2_unify.Fun(name, [l;r]) -> S_Arrow(simp_type_of_term l, simp_type_of_term r)
 	| _ -> failwith "Never";;
@@ -46,15 +42,15 @@ let rec typing_of_vars l map =
 let rec get_system lmd map_of_types = match lmd with
 	| Hw1.Var(v) -> ([], MapOfString.find v map_of_types)
 	| Hw1.App(l1, l2) -> let (stm1, t1) = get_system l1 map_of_types in
-					     let (stm2, t2) = get_system l2 map_of_types in
-					     let nt = S_Elem(next_type()) in
-					        (stm1 @ stm2 @ [(t1, S_Arrow(t2, nt))], nt)
+						 let (stm2, t2) = get_system l2 map_of_types in
+						 let nt = S_Elem(next_type()) in
+							(stm1 @ stm2 @ [(t1, S_Arrow(t2, nt))], nt)
 	| Hw1.Abs(v, l) -> let new_map = MapOfString.add v (S_Elem (next_type())) map_of_types in
 					   let stm1, t1 = get_system l new_map in
-					       (stm1, S_Arrow(MapOfString.find v new_map, t1));;
+						   (stm1, S_Arrow(MapOfString.find v new_map, t1));;
 
 let rec term_of_hm_type hm_type =
-    match hm_type with
+	match hm_type with
 	| HM_Elem(a) -> Hw2_unify.Var(a)
 	| HM_Arrow(a, b) -> Hw2_unify.Fun("->", [(term_of_hm_type a);(term_of_hm_type b)])
 	| _ -> failwith "Couldn't converted";;
@@ -67,7 +63,7 @@ let rec hm_type_of_term term =
 
 let free_vars hm_lambda = 
 	let rec impl hm_lambda set = 
-	    match hm_lambda with
+		match hm_lambda with
 		| HM_Var(a) -> if SetOfString.mem a set then SetOfString.empty else SetOfString.singleton a
 		| HM_App(a, b) -> SetOfString.union (impl a set) (impl b set)
 		| HM_Abs(a, b) -> impl b (SetOfString.add a set)
@@ -117,9 +113,9 @@ let infer_simp_type lmd =
 
 let algorithm_w hm_lmd = 
 	let rec impl hm_lambda types = 
-	    match hm_lambda with
+		match hm_lambda with
 		| HM_Var(a) -> if MapOfString.mem a types then (rm_union (MapOfString.find a types), MapOfString.empty) else raise (MyExp "Free variable encountered")
-	    | HM_App(a, b) ->
+		| HM_App(a, b) ->
 		   (let (hmt1, t1) = impl a types in
 			let (hmt2, t2) = impl b (do_subst_types t1 types) in
 			let new_type = HM_Elem (next_var()) in
@@ -128,10 +124,10 @@ let algorithm_w hm_lmd =
 		   | Some ans -> let ans_types = subst_to_subst 
 								(List.fold_left (fun map (str, term) -> MapOfString.add str (hm_type_of_term term) map) MapOfString.empty ans) (subst_to_subst t2 t1) in
 						(do_subst ans_types new_type SetOfString.empty, ans_types))
-	    | HM_Abs(a, b) -> let new_type = HM_Elem (next_var()) in
+		| HM_Abs(a, b) -> let new_type = HM_Elem (next_var()) in
 						let (hmt1, t1) = impl b (MapOfString.add a new_type (MapOfString.remove a types)) in
 						(HM_Arrow(do_subst t1 new_type SetOfString.empty, hmt1), t1)
-	    | HM_Let(a, b, c) -> let (hmt1, t1) = impl b types in
+		| HM_Let(a, b, c) -> let (hmt1, t1) = impl b types in
 						   let new_types = do_subst_types t1 types in
 						   let (hmt2, t2) = impl c (MapOfString.add a (add_union hmt1 new_types) (MapOfString.remove a new_types)) in
 						   (hmt2, subst_to_subst t2 t1) in
@@ -141,25 +137,25 @@ let algorithm_w hm_lmd =
 	with (MyExp e) -> None;;
 
 let rec algebraic_term_to_string (at : algebraic_term) = 
-    let rec impl a =
-        match a with 
-        | Var x -> x
-        | Fun(f, l) -> f ^ "(" ^ impl_for_list l ^ ")" 
-    
-    and impl_for_list lt = 
-        match lt with 
-        | [] -> ""
-        | (h::[]) -> impl h
-        | (h::t) -> (impl h) ^ " " ^ (impl_for_list t)
-    in
-    impl at;;
+	let rec impl a =
+		match a with 
+		| Var x -> x
+		| Fun(f, l) -> f ^ "(" ^ impl_for_list l ^ ")" 
+	
+	and impl_for_list lt = 
+		match lt with 
+		| [] -> ""
+		| (h::[]) -> impl h
+		| (h::t) -> (impl h) ^ " " ^ (impl_for_list t)
+	in
+	impl at;;
 
 let test123 t = 
 	let ans1 = algorithm_w t in
 	match ans1 with 
 	| Some (l, s) -> let ans2 = term_of_hm_type s in
-    print_string ((algebraic_term_to_string ans2) ^ "\n")
-    | None -> print_string "";;
+	print_string ((algebraic_term_to_string ans2) ^ "\n")
+	| None -> print_string "";;
 
 
 let tt1 = HM_Abs("x", HM_Var("x"));;
